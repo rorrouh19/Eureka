@@ -1,21 +1,46 @@
  <?php
 
- //LISTAR
- "select Codigo, Cliente, Nombre, Profesor from eureka"
+ header('Content-Type: application/json');
 
- //AGREGAR
- "insert intro eureka (Codigo, Cliente, Nombre, Profesor)" values ('$_POST[Codigo]', '$_POST[Cliente]', '$_POST[Nombre]', '$_POST[Profesor]')
+ require("conexion.php");
 
- //BORRAR
- "delete from eureka where ID=$_GET[ID]"
+ $conexion = retornarConexion();
 
- //CONSULTAR
-  "select ID, Codigo, Cliente, Nombre, Profesor from eureka where ID=$_GET[ID]"
+ switch ($_GET['accion']) {
+   case 'listar':
+     $datos = mysqli_query($conexion, "select id, Codigo, Cliente, Nombre, Profesor from eureka");
+     $resultado = mysqli_fetch_all($datos, MYSQLI_ASSOC);
+     echo json_encode($resultado);
+     break;
 
-  //MODIFICAR
-  "udpate eureka set Codigo='$_POST[Codigo]',
-                     Cliente='$_POST[Cliente]',
-                     Nombre='$_POST[Nombre]',
-                     Profesor='$_POST[Profesor]'
-                     where ID=$_GET[ID]"
+   case 'agregar':
+     $respuesta = mysqli_query($conexion,"insert into eureka (Codigo, Cliente, Nombre, Profesor) values ('$_POST[Codigo]', '$_POST[Cliente]', '$_POST[Nombre]', '$_POST[Profesor]')" );
+     echo json_encode($respuesta);
+     break;
+
+   case 'borrar':
+     $respuesta = mysqli_query($conexion, "delete from eureka where id=$_GET[id]");
+     echo json_encode($respuesta);
+     break;
+
+  case 'consultar':
+     $datos = mysqli_query($conexion, "select id, Codigo, Cliente, Nombre, Profesor from eureka where id=$_GET[id]");
+     $resultado = mysqli_fetch_all($datos, MYSQLI_ASSOC);
+     echo json_encode($resultado);
+     break;
+
+ case 'modificar':
+  $respuesta = mysqli_query($conexion, "update eureka set  Codigo='$_POST[Codigo]',
+                                                           Cliente='$_POST[Cliente]',
+                                                           Nombre='$_POST[Nombre]',
+                                                           Profesor='$_POST[Profesor]'
+                                                           where id=$_GET[id]");
+      echo json_encode ($respuesta);
+      break;
+
+ }
+
+
+
+
  ?>
