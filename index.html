@@ -20,23 +20,241 @@
 
   <h1>Eureka Attendance</h1>
 
+<!--TABLA PRINCIPAL-->
+
   <div class="row">
     <div class="col-12">
       <table class="table table-striped table-bordered tabla-hover" id="tablaclases">
         <thead>
           <tr>
+            <td>id</td>
             <td>Codigo</td>
             <td>Cliente</td>
             <td>Nombre</td>
             <td>Profesor</td>
+            <td>Modificar</td>
+            <td>Borrar</td>
           </tr>
         </thead>
       </table>
        <button class="btn btn-sm btn-primary" id="btnAgregar">Agregar clase</button>
     </div>
   </div>
+<!-- FORMULARIO PARA AGREGAR O MODIFICAR CLASES-->
+
+<div class="modal fade" id="formularioClases" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+
+<!--Header-->
+
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">
+          <span aria-hidden="true">x</span>
+        </button>
+      </div>
+
+<!--Body-->
+
+      <div class="modal-body">
+        <input type="hidden" id="id">
+
+        <div class="form-row">
+          <div class="form-group col-md-12">
+           <label>Codigo:</label>
+            <input type="text" id="Codigo" class="form-control" placeholder="">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group col-md-12">
+            <label>Cliente:</label>
+            <input type="text" id="Cliente" class="form-control" placeholder="">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-md-12">
+            <label>Nombre:</label>
+            <input type="text" id="Nombre" class="form-control" placeholder="">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group col-md-12">
+            <label>Profesor:</label>
+            <input type="text" id="Profesor" class="form-control" placeholder="">
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" id="confirmarAgregar" class="btn btn-success">Agregar</button>
+        <button type="button" id="confirmarModificar" class="btn btn-success">Modificar</button>
+        <button type="button" class="btn btn-success" data-dismiss="modal">Cancelar</button>
+      </div>
+
+      </div>
+    </div>
+  </div>
 
 </div>
+
+<script>
+
+ let tabla1 =$("#tablaclases").DataTable({"ajax":{
+                                            url: "datos.php?accion=listar",
+                                            dataSrc:""},
+                                           "columns": [
+                                          {"data": "id"},
+                                          {"data": "Codigo"},
+                                          {"data": "Cliente"},
+                                          {"data": "Nombre"},
+                                          {"data": "Profesor"},
+                                          {"data": null,
+                                           "orderable": false},
+                                          {"data": null,
+                                           "orderable": false}],
+                                           "columnDefs": [{targets: 5,
+                                                          "defaultContent": "<button class='btn btn-sm btn-primary botonmodificar'>Modificar</button>",
+                                                        data: null},
+                                                      {targets: 6,
+                                                      "defaultContent": "<button class='btn btn-sm btn-primary botonborrar'>borrar</button>",
+                                                        data: null}],
+                                                        "lenguage":{
+                                                          "url": "DataTables/spanish.json",
+                                                        },
+                                          });
+
+     //Eventos de botones
+
+     $('#btnAgregar').click(function(){
+       $('#confirmarAgregar').show();
+       $('#confirmarModificar').hide();
+       limpiarFormulario();
+       $("#formularioClases").modal('show');
+     });
+
+     $('#confirmarAgregar').click(function(){
+       $("#formularioClases").modal('hide');
+       let registro = recuperarDatosFormulario();
+       agregarRegistro(registro);
+     });
+
+       $('#confirmarModificar').click(function(){
+       $("#formularioClases").modal('hide');
+       let registro = recuperarDatosFormulario();
+       modificarRegistro(registro);
+     });
+
+     $('#tablaclases tbody').on('click', "button.botonmodificar", function(){
+       $('#confirmarModificar').show();
+       $('#confirmarAgregar').hide();
+       let registro = tabla1.row($(this).parents('tr')).data();
+       recuperarRegistro(registro.id);
+      })
+
+
+
+
+     $('#tablaclases tbody').on('click' , "button.botonborrar", function(){
+       if (confirm("¿Seguro quieres eliminar esta clase?")) {
+         let registro = tabla1.row($(this).parents('tr')).data();
+         borrarRegistro(registro.id);
+       }
+     })
+
+     //Funciones que interactuan con el formulario de entrada
+
+     function limpiarFormulario(){
+       $('#Codigo').val('');
+       $('#Cliente').val('');
+       $('#Nombre').val('');
+       $('#Profesor').val('');
+
+     }
+
+      function recuperarDatosFormulario(){
+        let registro = {
+          Codigo: $('#Codigo').val(),
+          Cliente: $('#Cliente').val(),
+          Nombre: $('#Nombre').val(),
+          Profesor: $('#Profesor').val()
+      };
+      return registro;
+    }
+
+     //Funciones que se comunican con el server a traves de ajax
+
+     function agregarRegistro(registro){
+       $.ajax({
+         type:'POST',
+         url: "datos.php?accion=agregar",
+         data: registro,
+         success: function(msg){
+           tabla1.ajax.reload();
+         },
+         error: function() {
+           alert("hubo un problema al agregar el registro");
+         }
+
+       });
+     }
+
+       function borrarRegistro (id) {
+         $.ajax({
+           type:'GET',
+           url: "datos.php?accion=borrar&id=" + id,
+           data: '',
+           success: function(msg){
+             tabla1.ajax.reload();
+           },
+           error: function() {
+             alert("hubo un problema al borrar el registro");
+           }
+
+         });
+       }
+
+
+       function recuperarRegistro(id){
+         $.ajax({
+           type: 'GET',
+           url: "datos.php?accion=consultar&id=" + id,
+           data: '',
+           success: function (datos) {
+              $('#id').val(datos[0].id);
+              $('#Codigo').val(datos[0].Codigo);
+              $('#Cliente').val(datos[0].Cliente);
+              $('#Nombre').val(datos[0].Nombre);
+              $('#Profesor').val(datos[0].Profesor);
+
+              $("#formularioClases").modal('show');
+
+           },
+           error: function(){
+               alert("Hubo un error al recuperar los datos");
+           }
+         });
+       }
+
+         function modificarRegistro(registro) {
+           $.ajax({
+             type: 'POST',
+             url: "datos.php?accion=modificar&id=" + registro.id,
+             data: registro,
+             success: function (msg) {
+               tabla1.ajax.reload();
+             },
+             error: function(){
+               alert("El registro NO se modifico correctamente");
+             }
+           });
+         }
+
+
+
+</script>
+
 
   </body>
 </html>
